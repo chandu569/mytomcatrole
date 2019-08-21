@@ -1,0 +1,11 @@
+---
+- hosts: webserver
+  become: yes
+  vars:
+    - package_name: git
+    - env: staging
+  tasks:
+    - name: display message
+      template:
+        src: display.j2
+        dest: /home/ansible/display.txt

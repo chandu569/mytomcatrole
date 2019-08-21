@@ -1,0 +1,7 @@
+---
+# vars file for mytom
+xmx_size: 512m
+max_perm_size: 256m
+tomcat_username: admin
+tomcat_password: password
+

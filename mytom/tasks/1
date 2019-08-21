@@ -1,0 +1,30 @@
+---
+# tasks file for mytom
+- name: update apt-get package
+  become: true
+  apt:
+    update_cache: yes
+- name: install java8
+  apt:
+    name: default-jdk
+    state: present
+    install_recommends: no
+- name: group exists or not(https://docs.ansible.com/ansible/latest/modules/group_module.html)
+  group:
+    name: tomcat
+    state: present
+- name: add the user 'tomcat' with bash shell(https://docs.ansible.com/ansible/latest/modules/user_module.html)
+  user:
+    name: tomcat
+    shell: /bin/false
+    groups: tomcat
+    home: /opt/tomcat
+    append: yes
+- name: download tomcat
+  get_url:
+    url: http://apache.mirrors.ionfish.org/tomcat/tomcat-8/v8.5.5/bin/apache-tomcat-8.5.5.tar.gz
+    dest: /opt/tomcat
+- name: creates directory
+  file:
+    path: /opt/tomcat
+    state: directory

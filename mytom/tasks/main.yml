@@ -1,0 +1,91 @@
+---
+# tasks file for mytom
+- name: update apt-get package
+  become: true
+  apt:
+    update_cache: yes
+- name: install java8
+  apt:
+    name: default-jdk
+    state: present
+    install_recommends: no
+- name: group exists or not(https://docs.ansible.com/ansible/latest/modules/group_module.html)
+  group:
+    name: tomcat
+    state: present
+- name: add the user 'tomcat' with bash shell(https://docs.ansible.com/ansible/latest/modules/user_module.html)
+  user:
+    name: tomcat
+    shell: /bin/false
+    groups: tomcat
+    home: /opt/tomcat
+    append: yes
+- name: download tomcat
+  get_url:
+    url: https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.24/bin/apache-tomcat-8.5.24.tar.gz
+    dest: /opt/tomcat
+- name: creates directory
+  file:
+    path: /opt/tomcat
+    state: directory
+- name: Extract tomcat into /opt/tomcat (https://unix.stackexchange.com/questions/346346/ansible-extract-without-first-directory)
+  unarchive:
+    src: apache-tomcat-8.5.24.tar.gz
+    dest: /opt/tomcat
+    extra_opts: [--strip-components=1] 
+- name: Recursively change ownership of a directory
+  file:
+    path: /opt/tomcat
+    state: directory
+    recurse: yes
+    owner: tomcat
+    group: tomcat
+- name: tomcat group read access to the conf directory
+  file:
+    path: /opt/tomcat/conf
+    state: directory
+    recurse: yes
+    mode: g+r
+- name: tomcat execute access to the conf directory
+  file:
+    path: /opt/tomcat/conf
+    state: directory
+    mode: g+x
+- name: tomcat user the owner of the webapps, work, temp, and logs directories
+  file:
+    path: '/opt/tomcat/{{ item }}'
+    state: directory
+    recurse: yes
+    owner: tomcat
+  with_items:
+      - webapps
+      - work
+      - temp
+      - log
+- name:  reload the systemd daemon so that it knows about our service file
+  systemd:
+    daemon_reload: yes
+- name: Tomcat service to start 
+  systemd:
+    state: started
+    name: tomcat
+- name: copy tomcat8 file
+  template:
+    src: templates/tomcat8.j2
+    dest: /etc/systemd/system/tomcat.service
+  notify:
+    - restart tomcat
+- name: copy tomcat service
+  template:
+    src: templates/tomcat-users.xml.j2
+    dest: /opt/tomcat/conf/tomcat-users.xml
+  notify:
+    - restart tomcat
+
+- name: copy war
+  get_url:
+    url: https://github.com/chandu569/game/blob/master/gameoflife.war
+    dest: /opt/tomcat/webapps/
+    mode: 777
+  notify:
+    - restart tomcat

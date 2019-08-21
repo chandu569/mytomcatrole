@@ -1,0 +1,6 @@
+---
+# handlers file for mytom
+- name: restart tomcat
+  systemd:
+    state: restarted
+    name: tomcat
